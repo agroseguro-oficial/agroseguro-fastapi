@@ -1,37 +1,31 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
 import requests
-import logging
 
 app = FastAPI()
 
-# URL de produção do n8n
 N8N_WEBHOOK_URL = "https://agroseguro.app.n8n.cloud/webhook/salvar-dados-nf"
 
-logging.basicConfig(level=logging.INFO)
-
 @app.post("/receber-analise")
-async def receber_analise(request: Request):
+async def receber_analise(solicitar: Request):
     try:
-        dados = await request.json()
-        logging.info("📥 Dados recebidos do Assistente:")
-        logging.info(dados)
+        dados = await solicitar.json()
+        print("🧾 Dados recebidos do Assistente:")
+        print(dados)
 
         resposta_n8n = requests.post(N8N_WEBHOOK_URL, json=dados)
-        logging.info("📤 Enviado ao n8n:")
-        logging.info(resposta_n8n.status_code)
-        logging.info(resposta_n8n.text)
+        print("📤 Enviado ao n8n:")
+        print(resposta_n8n.status_code)
+        print(resposta_n8n.text)
 
-        return JSONResponse(content={
+        return {
             "mensagem": "Dados recebidos e encaminhados ao n8n com sucesso.",
             "status_n8n": resposta_n8n.status_code,
             "resposta_n8n": resposta_n8n.text
-        }, status_code=200)
+        }
 
-    except Exception as e:
-        logging.error("❌ Erro durante o processamento:")
-        logging.error(str(e))
-        return JSONResponse(content={
-            "erro": "Erro ao processar ou encaminhar dados.",
-            "detalhes": str(e)
-        }, status_code=500)
+    except Exception as erro:
+        print("❌ Erro ao processar requisição:", erro)
+        return {
+            "mensagem": "Erro ao processar requisição",
+            "erro": str(erro)
+        }
